@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.goodbye.daemon.plist</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- This runs every hour at minute 0 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Minute</key>
+      <integer>0</integer>
+    </dict>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/goodbye/stderr.log</string>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/goodbye/stdout.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
+    </dict>
+   
+   <!-- TODO: You should update the paths here -->
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-lc</string>
+      <string>~/path/to/check && ~/path/to/bye.sh</string>
+    </array>
+</dict>
+</plist>

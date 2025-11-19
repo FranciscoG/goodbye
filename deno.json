@@ -1,0 +1,11 @@
+{
+    "tasks": {
+        "start": "DENO_TLS_CA_STORE=system deno run --allow-run --env-file --allow-env=\"BYE_*\" --allow-net=gist.github.com,gist.githubusercontent.com check.js",
+        "compile": "deno compile --allow-run --env-file --allow-env=\"BYE_*\" --allow-net=gist.github.com,gist.githubusercontent.com check.js"
+    },
+    "permissions": {
+        "env-file": [".env"],
+        "allow-net": ["gist.github.com", "gist.githubusercontent.com"],
+        "allow-env": ["BYE_*"]
+    }
+}
