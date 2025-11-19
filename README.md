@@ -2,7 +2,11 @@
 
 This is an experiment. Use at your own risk.
 
-I know you should never be doing anything personal on your work laptop but sometimes that can't be avoided. Then one day you are terminated and immediately shut out of your machine and you had no time to clean up and delete all of your personal items. What this project attempts to do is setup a background process, similar to a cron job, that checks a public gist for a specific keyword. You then run a shell script if the word it finds matches
+I know you should never be doing anything personal on your work laptop but sometimes that can't be avoided. Then one day you are terminated and immediately shut out of your machine and you had no time to clean up and delete all of your personal items. What this project attempts to do is setup a background process using a LaunchDaemon that checks a public gist for a specific keyword. If the keyword matches, it runs a shell script to delete your personal files.
+
+Why? When you are terminated the hope is that they actually do wipe your machine. But I don't always trust that to be the case so this is kind of like backup insurance for your personal items. 
+
+**Important:** This uses a system-level LaunchDaemon (not a LaunchAgent) so it will continue running even if your user account is locked by IT. However, if the machine is powered off or remotely wiped, the daemon won't get a chance to run. 
 
 ## Requirements
 
@@ -52,16 +56,25 @@ deno task compile
 
 ### Update the plist
 
-#### ProgramArguments
+#### UserName (Required)
 
-This is the only **required** one you should definitely change. Update the path to where you placed the executable and your shell script that handles deleting things.
+Update this to your actual macOS username. You can find your username by running `echo $USER`:
+
+```xml
+<key>UserName</key>
+<string>YourMacOsUserName</string>
+```
+
+#### ProgramArguments (Required)
+
+Update these to absolute paths pointing to your compiled `check` executable and `bye.sh` script:
 
 ```xml
 <key>ProgramArguments</key>
 <array>
 	<string>/bin/bash</string>
 	<string>-lc</string>
-	<string>~/path/to/check && ~/path/to/bye.sh</string>
+	<string>/path/to/check && /path/to/bye.sh</string>
 </array>
 ```
 
@@ -85,7 +98,7 @@ Google `StartCalendarInterval` for more examples. Here's one blog post I found t
 
 #### Logs
 
-I set the logs to write to `/var/log/goodbye`, change that if you want. If you do, update [load.sh](./load.sh) because it uses `mkdir -p` to create the log folder in there.
+Logs are written to `/var/log/goodbye`. The `load.sh` script will create this directory with proper permissions automatically.
 
 ```xml
 <key>StandardErrorPath</key>
@@ -94,6 +107,8 @@ I set the logs to write to `/var/log/goodbye`, change that if you want. If you d
 <key>StandardOutPath</key>
 <string>/var/log/goodbye/stdout.log</string>
 ```
+
+If you want to change the log location, update both the plist file and the `load.sh` script.
 
 #### Path
 
@@ -107,21 +122,42 @@ Check the path to make sure it includes any paths you need.
 </dict>
 ```
 
-### Load the plist
+### Load the daemon
+
+Run the load script with sudo (required for system-level daemons):
 
 ```sh
 ./load.sh
 ```
 
+This will:
+- Create the log directory with proper permissions
+- Install the plist to `/Library/LaunchDaemons/` (system-level)
+- Set correct ownership (`root:wheel`) and permissions
+- Load the daemon to start running
+
+## LaunchDaemon vs LaunchAgent
+
+This project uses a **LaunchDaemon** (not a LaunchAgent) for critical reasons:
+
+- **LaunchAgents** run only when a user is logged in and will stop if your account is locked
+- **LaunchDaemons** run at the system level and continue operating even if your user account is disabled by IT
+
+This ensures the cleanup process can run even after account lockout, though it requires the machine to remain powered on.
+
 ## Why not a cron job?
 
-While `crontab` is supported on MacOS, the preferred way of running timed processes is launch agents. The main reason is how your computer going to sleep affects it:
+While `crontab` is supported on macOS, LaunchDaemons are the preferred and more reliable method for running scheduled processes:
 
+**Sleep/Wake behavior:**
 From Apple's [documentation](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/ScheduledJobs.html#//apple_ref/doc/uid/10000172i-CH1-SW2):
 
 > if the system is turned off or asleep, cron jobs do not execute; they will not run until the next designated time occurs.
 
 > If you schedule a launchd job by setting the `StartCalendarInterval` key and the computer is asleep when the job should have run, your job will run when the computer wakes up. However, if the machine is off when the job should have run, the job does not execute until the next designated time occurs.
+
+**System-level execution:**
+LaunchDaemons run at the system level and will continue operating even if your user account is locked, whereas cron jobs run at the user level and stop when the user is logged out or disabled.
 
 ## Resources
 
