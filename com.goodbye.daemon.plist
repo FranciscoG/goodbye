@@ -3,7 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.goodbye.daemon.plist</string>
+    <string>com.goodbye.daemon</string>
+
+    <!-- Run as this user so we can access their files -->
+    <!-- TODO: Update this to your actual username -->
+    <key>UserName</key>
+    <string>YourMacOsUserName</string>
 
     <key>RunAtLoad</key>
     <true/>
@@ -25,14 +30,17 @@
     <dict>
       <key>PATH</key>
       <string><![CDATA[/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
+      <!-- Required for Deno TLS -->
+      <key>DENO_TLS_CA_STORE</key>
+      <string>system</string>
     </dict>
    
-   <!-- TODO: You should update the paths here -->
+    <!-- TODO: Update these absolute paths to your actual locations -->
     <key>ProgramArguments</key>
     <array>
       <string>/bin/bash</string>
       <string>-lc</string>
-      <string>~/path/to/check && ~/path/to/bye.sh</string>
+      <string>/path/to/check && /path/to/bye.sh</string>
     </array>
 </dict>
 </plist>
